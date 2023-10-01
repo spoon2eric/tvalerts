@@ -9,7 +9,7 @@ Your README.md file is looking good! Here are a few suggestions to make it clear
 ## Description
 **Tradingview Alerts** - Track alerts and their stages.
 
-This is a Python-developed Flash application designed to display and track your TradingView alerts. Simple :)
+This is a Python-developed Flash application (webhook) designed to display and track your TradingView alerts. Simple :)
 
 I wanted a way to track TradingView alerts more efficiently. Sometimes, you may want two, three, or even four "events" to occur in a specific sequence before making a buy or sell decision. The `tvalerts` project was thus created to help you ensure that multiple conditions are met in the correct order before executing a trade!
 
@@ -39,6 +39,9 @@ The "stage" element of the JSON is crucial, and it is used with the assigned sta
 Once the static value and stage are equal, the sequence is complete. If stage 3 occurs before stage 2, an error will occur.
 
 Last, run the python script and setup your webhook alert in TradingView to point to your server: http://127.0.0.1:5000/
+
+![image](https://github.com/spoon2eric/tvalerts/assets/35353533/d2bd8066-1139-459b-93b5-8543eebbdeea)
+
 
 ## Installation
 Download and use.

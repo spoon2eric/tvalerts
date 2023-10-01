@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Trading Alerts</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <style>
+        .navbar-brand {
+            font-size: 2.5rem; /* Set font size same as h1 */
+        }
+		.completed {
+            background-color: limegreen; /* Highlight rows with a green background when completed */
+        }
+        .anomaly {
+            background-color: red; /* Highlight rows with a red background when anomaly is detected */
+        }
+        .separator {
+            background-color: #e9ecef; /* Or any other color you prefer for separator */
+        }
+    </style>
+</head>
+<body>
+ <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Tradingview Alerts</a>
+		<div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/settings">
+                        <img src="/static/settings_icon.jpg" alt="Settings" width="30" height="30">
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+<div class="container mt-3">
+    <div>
+        <h2>Current Stage: <span id="currentStage">0</span> / <span id="staticNumber">{{ static_number }}</span></h2>
+    </div>
+    <form action="/set_static" method="post">
+        <label for="static_number">Total Number of Stages:</label>
+        <input type="number" id="static_number" name="static_number" value="{{ static_number }}">
+        <button type="submit" class="btn btn-primary">Set</button>
+    </form>
+    <table class="table" id="dataTable">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Ticker</th>
+                <th>Action</th>
+                <th>Signal Type</th>
+                <th>Stage</th>
+            </tr>
+        </thead>
+        <tbody id="dataBody">
+        </tbody>
+    </table>
+    <form action="/clear" method="post" id="clearForm">
+        <button type="submit" class="btn btn-danger">Clear Database</button>
+    </form>
+</div>
+<script src="data_script.js?v=0.1"></script>
+<script>
+    $(document).ready(function () {
+        function updateTable() {
+			$.get('/get_data', function (data) {
+				console.log(data);
+				var groupedData = {};
+				data.alerts.forEach(function (alert) {
+					if (!groupedData[alert[1]]) groupedData[alert[1]] = [];
+					groupedData[alert[1]].push(alert);
+				});
+
+				var tableContent = '';
+				Object.keys(groupedData).forEach(function (ticker, index) {
+					var previousStage = 0; // To keep track of the previous stage for each ticker
+					groupedData[ticker].forEach(function (alert) {
+						var completedClass = (alert[4] == {{ static_number }}) ? 'completed' : '';
+						var anomalyClass = '';
+						if(alert[4] != previousStage + 1 || alert[4] > {{ static_number }}) {
+							anomalyClass = 'anomaly';
+						}
+						tableContent += '<tr class="' + completedClass + ' ' + anomalyClass + '">';
+						tableContent += '<td>' + alert[0] + '</td>';
+						tableContent += '<td>' + alert[1] + '</td>';
+						tableContent += '<td>' + alert[2] + '</td>';
+						tableContent += '<td>' + alert[3] + '</td>';
+						tableContent += '<td>' + alert[4] + '</td>';
+						tableContent += '</tr>';
+						previousStage = alert[4]; // Update the previous stage
+					});
+					if(index < Object.keys(groupedData).length - 1) {
+						tableContent += '<tr class="separator"><td colspan="5"></td></tr>';
+					}
+				});
+				$('#dataBody').html(tableContent);
+
+				if (data.alerts.length > 0) {
+					var stages = data.alerts.map(function (o) { return o[4]; });
+					var maxStage = Math.max.apply(Math, stages);
+					$('#currentStage').text(maxStage);
+				}
+			});
+		}
+
+		//updateTable
+        updateTable();
+        setInterval(updateTable, 5000);
+
+        $('#clearForm').submit(function (event) {
+            event.preventDefault();
+            $.post('/clear', function () {
+                updateTable();
+                window.location.reload(true);
+            });
+        });
+
+        $('form[action="/set_static"]').submit(function (event) {
+            event.preventDefault();
+            var newStaticNumber = $(this).find('input[name="static_number"]').val();
+            $.post('/set_static', $(this).serialize(), function () {
+                updateTable();
+                $('#currentStage').siblings('span#staticNumber').text(newStaticNumber);
+            });
+        });
+    });
+</script>
+</body>
+</html>

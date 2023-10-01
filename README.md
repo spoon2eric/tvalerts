@@ -2,10 +2,6 @@
 ![image](https://github.com/spoon2eric/tvalerts/assets/35353533/f74ff2e9-fc0a-4116-9c53-08aaaf0a77c5)
 
 
-Your README.md file is looking good! Here are a few suggestions to make it clearer and more polished:
-
----
-
 ## Description
 **Tradingview Alerts** - Track alerts and their stages.
 

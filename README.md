@@ -34,7 +34,7 @@ The "stage" element of the JSON is crucial, and it is used with the assigned sta
 
 Once the static value and stage are equal, the sequence is complete. If stage 3 occurs before stage 2, an error will occur.
 
-Last, run the python script and setup your webhook alert in TradingView to point to your server: https://example.com:5000/webhook
+Last, run the python script and setup your webhook alert in TradingView to point to your server: http(s)://example.com/webhook
 
 In Summary:
 Use a public URL, not a localhost or 127.0.0.1.

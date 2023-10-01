@@ -4,4 +4,4 @@
 Tradingview Alerts - Track alerts and their stages.
 
 ## Installation
-Instructions to come!
+Download and use.

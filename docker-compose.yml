@@ -2,8 +2,8 @@ version: '3.1'
 
 services:
   webapp:
-    image: ghcr.io/spoon2eric/tvalerts:latest  # Replace with the actual image name and tag
+    image: ghcr.io/spoon2eric/tvalerts:latest
     ports:
       - "5000:5000"
     volumes:
-      - ./data:/var/lib/docker/volumes/tvalerts/_data  # This will create a volume for persisting data
+      - ./data:/var/lib/docker/volumes/tvalerts/_data

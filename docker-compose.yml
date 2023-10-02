@@ -6,4 +6,4 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./data:/usr/src/app/data  # This will create a volume for persisting data
+      - ./data:/var/lib/docker/volumes/tvalerts/_data  # This will create a volume for persisting data

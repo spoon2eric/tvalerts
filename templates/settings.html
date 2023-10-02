@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Settings</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 50%;
+            margin: auto;
+        }
+
+        header {
+            background: #50b3a2;
+            color: #ffffff;
+            text-align: center;
+            padding: 1em;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-around;
+            background: #333;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            padding: 1em;
+        }
+
+        form {
+            background: #ffffff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        label, select, input, button {
+            display: block;
+            margin-bottom: 20px;
+        }
+
+        button {
+            cursor: pointer;
+            background: #28a745;
+            color: #ffffff;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background: #218838;
+        }
+
+        @media(max-width: 768px) {
+            .container {
+                width: 95%;
+            }
+        }
+    </style>
+    <script>
+        function addStageField() {
+            var container = document.getElementById('stages_container');
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'stages';
+            container.appendChild(input);
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Settings</h1>
+    </header>
+    <nav>
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('settings') }}">Settings</a>
+    </nav>
+    <div class="container">
+        <form method="POST">
+            <label for="ticker_to_add">Ticker:</label>
+            <select name="ticker_to_add">
+                {% for ticker in tickers %}
+                    <option value="{{ ticker[0] }}">{{ ticker[1] }}</option>
+                {% endfor %}
+            </select>
+            <label for="plan_to_add">Plan:</label>
+            <select name="plan_to_add">
+                {% for plan in plans %}
+                    <option value="{{ plan[0] }}">{{ plan[1] }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" name="add_ticker_to_plan">Add ticker to Plan</button>
+        </form>
+        <form method="POST">
+            <label for="ticker">Create Plan for Ticker:</label>
+            <select name="ticker">
+                {% for ticker in tickers %}
+                    <option value="{{ ticker[0] }}">{{ ticker[1] }}</option>
+                {% endfor %}
+            </select>
+            <label for="plan_name">Plan Name:</label>
+            <input type="text" name="plan_name" required>
+            <label for="stages">Stages:</label>
+            <div id="stages_container">
+                <input type="text" name="stages" required>
+            </div>
+            <button type="button" onclick="addStageField()">+</button>
+            <button type="submit" name="add_plan">Add Plan</button>
+        </form>
+    </div>
+</body>
+</html>

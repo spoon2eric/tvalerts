@@ -32,6 +32,9 @@ The "stage" element of the JSON is crucial, and it is used with the assigned sta
 {"ticker": "GOOG", "plan": "Test", "stage": "Buy"}
 ```
 
+![image](https://github.com/spoon2eric/tvalerts/assets/35353533/c421818d-d415-47a4-b5ac-1b1f86506a40)
+
+
 Setup your plan and tickers on the Settings page and in the schema.sql file to populate tickers.
 
 Last, run the python script and setup your webhook alert in TradingView to point to your server: http(s)://example.com/webhook

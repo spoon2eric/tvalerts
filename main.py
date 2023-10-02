@@ -1,8 +1,21 @@
 from socket import SocketIO
 import sqlite3
+import os
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_socketio import emit, send
 from flask_socketio import SocketIO
+
+# Directory of the script or current file.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Path to the data directory.
+DATA_DIR = os.path.join(BASE_DIR, 'data')
+
+# Ensure the data directory exists, if not, create it.
+os.makedirs(DATA_DIR, exist_ok=True)
+
+# Path to the database file.
+DATABASE = os.path.join(DATA_DIR, 'database.db')
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -17,7 +30,7 @@ def handle_disconnect():
     print("Client Disconnected")
 
 def setup_database():
-    conn = sqlite3.connect('tradingview.db')
+    conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
     with open('schema.sql', 'r') as f:
         cursor.executescript(f.read())
@@ -26,7 +39,7 @@ def setup_database():
 
 @app.route("/")
 def index():
-    conn = sqlite3.connect('tradingview.db')
+    conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
     cursor.execute('''SELECT tickers.name as ticker_name, plans.name as plan_name, 
                              stages.description, ticker_stage_status.status, stages.sequence
@@ -72,7 +85,7 @@ def index():
 
 @app.route("/settings", methods=["GET", "POST"])
 def settings():
-    conn = sqlite3.connect('tradingview.db')
+    conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
     # Getting tickers for dropdown
@@ -130,7 +143,7 @@ def settings():
 
 @app.route("/get_data", methods=["GET"])
 def get_data():
-    conn = sqlite3.connect('tradingview.db')
+    conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
     
     try:
@@ -183,7 +196,7 @@ def get_data():
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    conn = sqlite3.connect('tradingview.db')
+    conn = sqlite3.connect(DATABASE)
     
     try:
         data = request.json
@@ -259,7 +272,7 @@ def webhook():
 def delete_plan(ticker, plan):
     try:
         # Connect to the database
-        conn = sqlite3.connect('tradingview.db')
+        conn = sqlite3.connect(DATABASE)
         c = conn.cursor()
 
         # Find the ids of the ticker and plan from their names

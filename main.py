@@ -1,15 +1,18 @@
-from socket import SocketIO
 import sqlite3
 import os
+import logging
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_socketio import emit, send
 from flask_socketio import SocketIO
+
+logging.basicConfig(level=logging.INFO)
 
 # Directory of the script or current file.
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Path to the data directory.
 DATA_DIR = os.path.join(BASE_DIR, 'data')
+#DATA_DIR = os.path.join(BASE_DIR, 'data')
 
 # Ensure the data directory exists, if not, create it.
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -29,13 +32,35 @@ def handle_connect():
 def handle_disconnect():
     print("Client Disconnected")
 
+#def setup_database():
+#    print("Setting up database...")
+#    try:
+#        conn = sqlite3.connect(DATABASE)
+#        cursor = conn.cursor()
+#        with open('schema.sql', 'r') as f:
+#            cursor.executescript(f.read())
+#        conn.commit()
+#        print("Database setup completed successfully.")
+#    except Exception as e:
+#        print(f"Error setting up database: {e}")
+#    finally:
+#        if conn:
+#            conn.close()
+
 def setup_database():
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    with open('schema.sql', 'r') as f:
-        cursor.executescript(f.read())
-    conn.commit()
-    conn.close()
+    logging.info("Setting up database...")
+    try:
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+        with open('schema.sql', 'r') as f:
+            cursor.executescript(f.read())
+        conn.commit()
+        logging.info("Database setup completed successfully.")
+    except Exception as e:
+        logging.error(f"Error setting up database: {e}")
+    finally:
+        if conn:
+            conn.close()
 
 @app.route("/")
 def index():
@@ -307,6 +332,7 @@ def delete_plan(ticker, plan):
 
     return redirect(url_for('index'))
 
+setup_database()
+
 if __name__ == "__main__":
-    setup_database()
     socketio.run(app, host='0.0.0.0', debug=True, port=5000)

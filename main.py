@@ -4,7 +4,7 @@ import logging
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_socketio import emit, send
 from flask_socketio import SocketIO
-#update
+
 logging.basicConfig(level=logging.INFO)
 
 # Directory of the script or current file.
@@ -123,6 +123,15 @@ def settings():
             plan_name = request.form.get("plan_name")
             stages_desc = request.form.getlist("stages")
 
+            # Check if the plan already exists
+            cursor.execute("SELECT * FROM plans WHERE name=?", (plan_name,))
+            existing_plan = cursor.fetchone()
+            if existing_plan:
+                cursor.execute('SELECT * FROM plans')
+                plans = cursor.fetchall()
+                conn.close()
+                return render_template('settings.html', plan_exists=True, tickers=tickers, plans=plans)
+
             # Creating a new plan
             cursor.execute('INSERT INTO plans (name) VALUES (?)', (plan_name,))
             plan_id = cursor.lastrowid
@@ -142,6 +151,7 @@ def settings():
                                   VALUES (?, ?)''', (ticker_id, stage_id[0]))
 
             conn.commit()
+        
         elif 'add_ticker_to_plan' in request.form:
             ticker_id = request.form.get("ticker_to_add")
             plan_id = request.form.get("plan_to_add")
@@ -157,6 +167,48 @@ def settings():
                                   VALUES (?, ?)''', (ticker_id, stage_id[0]))
 
             conn.commit()
+
+        elif 'delete_plan_submit' in request.form:
+            plan_id_to_delete = request.form.get("delete_plan")
+
+            # Deleting associated ticker_stage_status entries
+            cursor.execute('DELETE FROM ticker_stage_status WHERE stage_id IN (SELECT id FROM stages WHERE plan_id = ?)', (plan_id_to_delete,))
+
+            # Deleting associated stages
+            cursor.execute('DELETE FROM stages WHERE plan_id = ?', (plan_id_to_delete,))
+
+            # Deleting associations in ticker_plan
+            cursor.execute('DELETE FROM ticker_plan WHERE plan_id = ?', (plan_id_to_delete,))
+
+            # Deleting the plan
+            cursor.execute('DELETE FROM plans WHERE id = ?', (plan_id_to_delete,))
+
+            conn.commit()
+
+        elif 'add_ticker' in request.form:
+            new_ticker_name = request.form.get("new_ticker_name")
+            if new_ticker_name:
+                # Insert the new ticker
+                cursor.execute('INSERT OR IGNORE INTO tickers (name) VALUES (?)', (new_ticker_name,))
+                conn.commit()
+                
+        elif 'delete_ticker' in request.form:
+            ticker_id_to_delete = request.form.get("ticker_to_delete")
+
+            # Deleting associated ticker_stage_status entries
+            cursor.execute('DELETE FROM ticker_stage_status WHERE ticker_id = ?', (ticker_id_to_delete,))
+
+            # Deleting associations in ticker_plan
+            cursor.execute('DELETE FROM ticker_plan WHERE ticker_id = ?', (ticker_id_to_delete,))
+
+            # Deleting the ticker
+            cursor.execute('DELETE FROM tickers WHERE id = ?', (ticker_id_to_delete,))
+            
+            conn.commit()
+
+            # Re-fetch tickers after deletion
+            cursor.execute('SELECT * FROM tickers')
+            tickers = cursor.fetchall()
 
     # Getting plans for dropdown
     cursor.execute('SELECT * FROM plans')

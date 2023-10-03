@@ -84,6 +84,17 @@
             color: green;
             font-weight: bold;
         }
+
+        .boxed-section {
+            width: 80%; /* Adjust this value based on your preference */
+            max-width: 600px; /* This ensures the boxes don't get too wide on large screens */
+            padding: 20px;
+            margin: 20px auto; /* 'auto' left and right margins center the boxes */
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 12px #aaa;
+            background-color: #f9f9f9; /* A light background color for the boxes */
+        }
+        
     </style>
 </head>
 <body>
@@ -94,7 +105,7 @@
         <a href="{{ url_for('index') }}">Home</a>
         <a href="{{ url_for('settings') }}">Settings</a>
     </nav>
-    <div class="container">
+    <div class="boxed-section">
         {% for ticker, plans in data.items() %}
             <div class="group">
                 <h2>{{ ticker }}</h2>

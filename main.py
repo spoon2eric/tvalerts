@@ -4,7 +4,7 @@ import logging
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_socketio import emit, send
 from flask_socketio import SocketIO
-
+#update
 logging.basicConfig(level=logging.INFO)
 
 # Directory of the script or current file.

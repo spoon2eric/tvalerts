@@ -62,19 +62,28 @@
         }
 
         .boxed-section {
-            width: 80%; /* Adjust this value based on your preference */
-            max-width: 600px; /* This ensures the boxes don't get too wide on large screens */
+            width: 48%; 
+            max-width: 600px;
             padding: 20px;
-            margin: 20px auto; /* 'auto' left and right margins center the boxes */
+            margin: 20px auto;
             border: 1px solid #ccc;
             box-shadow: 2px 2px 12px #aaa;
-            background-color: #f9f9f9; /* A light background color for the boxes */
+            background-color: #f9f9f9;
+        }
+
+        .settings-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
         }
 
 
         @media(max-width: 768px) {
             .container {
                 width: 95%;
+            }
+            .boxed-section {
+                width: 100%;
             }
         }
     </style>
@@ -90,79 +99,82 @@
 </head>
 <body>
     <header>
-        <h1>Settings</h1>
+        <h1>Tradingview Alerts</h1>
     </header>
     <nav>
         <a href="{{ url_for('index') }}">Home</a>
         <a href="{{ url_for('settings') }}">Settings</a>
+        <a href="{{ url_for('alerts') }}">Alerts</a>
     </nav>
-    <div class="boxed-section">
-        <h2>Add Ticker to Plan</h2>
-        <form method="POST">
-            <label for="ticker_to_add">Ticker:</label>
-            <select name="ticker_to_add">
-                {% for ticker in tickers %}
-                    <option value="{{ ticker[0] }}">{{ ticker[1] }}</option>
-                {% endfor %}
-            </select>
-            <label for="plan_to_add">Plan:</label>
-            <select name="plan_to_add">
-                {% for plan in plans %}
-                    <option value="{{ plan[0] }}">{{ plan[1] }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" name="add_ticker_to_plan">Add ticker to Plan</button>
-        </form>
-    </div>
-    <div class="boxed-section">
-        <h2>Create Plan for Ticker</h2>
-        <form method="POST">
-            <select name="ticker">
-                {% for ticker in tickers %}
-                    <option value="{{ ticker[0] }}">{{ ticker[1] }}</option>
-                {% endfor %}
-            </select>
-            <label for="plan_name">Plan Name:</label>
-            <input type="text" name="plan_name" required>
-            <label for="stages">Stages:</label>
-            <div id="stages_container">
-                <input type="text" name="stages" required>
-            </div>
-            <button type="button" onclick="addStageField()">+</button>
+    <div class="settings-grid">
+        <div class="boxed-section">
+            <h2>Add Ticker to Plan</h2>
+            <form method="POST">
+                <label for="ticker_to_add">Ticker:</label>
+                <select name="ticker_to_add">
+                    {% for ticker in tickers %}
+                        <option value="{{ ticker[0] }}">{{ ticker[1] }}</option>
+                    {% endfor %}
+                </select>
+                <label for="plan_to_add">Plan:</label>
+                <select name="plan_to_add">
+                    {% for plan in plans %}
+                        <option value="{{ plan[0] }}">{{ plan[1] }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" name="add_ticker_to_plan">Add ticker to Plan</button>
+            </form>
+        </div>
+        <div class="boxed-section">
+            <h2>Create Plan for Ticker</h2>
+            <form method="POST">
+                <select name="ticker">
+                    {% for ticker in tickers %}
+                        <option value="{{ ticker[0] }}">{{ ticker[1] }}</option>
+                    {% endfor %}
+                </select>
+                <label for="plan_name">Plan Name:</label>
+                <input type="text" name="plan_name" required>
+                <label for="stages">Stages:</label>
+                <div id="stages_container">
+                    <input type="text" name="stages" required>
+                </div>
+                <button type="button" onclick="addStageField()">+</button>
+                
+                {% if error %}
+                    <div class="error">Plan already exists in the database.</div>
+                {% endif %}
             
-            {% if error %}
-                <div class="error">Plan already exists in the database.</div>
-            {% endif %}
-        
-            <button type="submit" name="add_plan">Add Plan</button>
-        </form>
-    </div>
-    <div class="boxed-section">
-        <h2>Modify Tickers</h2>
-        <form method="POST">
-            <label for="new_ticker_name">Add New Ticker:</label>
-            <input type="text" name="new_ticker_name">
-            <button type="submit" name="add_ticker">Add</button>
-            <br><br>
-            <label for="ticker_to_delete">Select Ticker to Delete:</label>
-            <select name="ticker_to_delete">
-                {% for ticker in tickers %}
-                    <option value="{{ ticker[0] }}">{{ ticker[1] }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" name="delete_ticker">Delete</button>
-        </form>
-    </div>
-    <div class="boxed-section">
-        <h2>Delete Plan</h2>
-        <form method="POST">
-            <select name="delete_plan">
-                {% for plan in plans %}
-                    <option value="{{ plan[0] }}">{{ plan[1] }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" name="delete_plan_submit">Delete Plan</button>
-        </form>
+                <button type="submit" name="add_plan">Add Plan</button>
+            </form>
+        </div>
+        <div class="boxed-section">
+            <h2>Modify Tickers</h2>
+            <form method="POST">
+                <label for="new_ticker_name">Add New Ticker:</label>
+                <input type="text" name="new_ticker_name">
+                <button type="submit" name="add_ticker">Add</button>
+                <br><br>
+                <label for="ticker_to_delete">Select Ticker to Delete:</label>
+                <select name="ticker_to_delete">
+                    {% for ticker in tickers %}
+                        <option value="{{ ticker[0] }}">{{ ticker[1] }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" name="delete_ticker">Delete</button>
+            </form>
+        </div>
+        <div class="boxed-section">
+            <h2>Delete Plan</h2>
+            <form method="POST">
+                <select name="delete_plan">
+                    {% for plan in plans %}
+                        <option value="{{ plan[0] }}">{{ plan[1] }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" name="delete_plan_submit">Delete Plan</button>
+            </form>
+        </div>
     </div>
     <script>
         {% if plan_exists %}

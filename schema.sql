@@ -44,5 +44,15 @@ CREATE TABLE IF NOT EXISTS errors (
     FOREIGN KEY (plan_id) REFERENCES plans (id)
 );
 
+CREATE TABLE IF NOT EXISTS alerts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ticker TEXT NOT NULL,
+    plan TEXT NOT NULL,
+    stage TEXT NOT NULL,
+    timestamp TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
 -- Insert initial data
 INSERT OR IGNORE INTO tickers (name) VALUES ('ETHUSD'), ('BTCUSD'), ('LINKUSD'), ('MASKUSD'), ('PEPEUSD'), ('AVAXUSD'), ('FTMUSD'), ('AGIXUSD');

@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import sqlite3
 import os
 import logging
@@ -32,21 +33,6 @@ def handle_connect():
 def handle_disconnect():
     print("Client Disconnected")
 
-#def setup_database():
-#    print("Setting up database...")
-#    try:
-#        conn = sqlite3.connect(DATABASE)
-#        cursor = conn.cursor()
-#        with open('schema.sql', 'r') as f:
-#            cursor.executescript(f.read())
-#        conn.commit()
-#        print("Database setup completed successfully.")
-#    except Exception as e:
-#        print(f"Error setting up database: {e}")
-#    finally:
-#        if conn:
-#            conn.close()
-
 def setup_database():
     logging.info("Setting up database...")
     try:
@@ -61,6 +47,50 @@ def setup_database():
     finally:
         if conn:
             conn.close()
+
+@socketio.on('new_alert')
+def handle_new_alert(data):
+    message = data.get('message')
+    
+    # Adjusted time
+    adjusted_time = datetime.utcnow() - timedelta(hours=5)
+    timestamp = adjusted_time.strftime('%Y-%m-%d %H:%M:%S')
+
+    # Connect to the database
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    try:
+        # Insert the new alert into the alerts table
+        cursor.execute('INSERT INTO alerts (message, timestamp) VALUES (?, ?)', (message, timestamp))
+        conn.commit()
+
+        # Emit the alert to all connected clients
+        socketio.emit('new_alert', {'timestamp': datetime.now().strftime('%m/%d %H:%M'), 
+                            'message': formatted_message})
+
+
+    except sqlite3.Error as e:
+        print("Database error:", e)
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/alerts')
+def alerts():
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM alerts ORDER BY id DESC")
+    raw_alerts = cursor.fetchall()
+    conn.close()
+
+    # Format the datetime strings for display
+    formatted_alerts = []
+    for alert in raw_alerts:
+        adjusted_date = datetime.strptime(alert[4], '%Y-%m-%d %H:%M:%S').strftime('%m/%d %H:%M')
+        formatted_alerts.append((alert[0], adjusted_date, alert[1], alert[2], alert[3]))
+
+    return render_template('alerts.html', alerts=formatted_alerts)
 
 @app.route("/")
 def index():
@@ -218,6 +248,19 @@ def settings():
 
     return render_template('settings.html', tickers=tickers, plans=plans)
 
+@app.route("/clear_alerts", methods=["POST"])
+def clear_alerts():
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    cursor.execute('DELETE FROM alerts')
+    conn.commit()
+
+    conn.close()
+
+    return jsonify(status='success')
+
+
 @app.route("/get_data", methods=["GET"])
 def get_data():
     conn = sqlite3.connect(DATABASE)
@@ -286,6 +329,17 @@ def webhook():
             return jsonify(error="Invalid data received"), 400
         
         cursor = conn.cursor()
+
+        cursor.execute('INSERT INTO alerts (ticker, plan, stage) VALUES (?, ?, ?)', 
+                    (ticker_name, plan_name, stage_description))
+        conn.commit()
+
+        # Formulate a message for the clients
+        formatted_message = f"Ticker: {ticker_name}, Plan: {plan_name}, Stage: {stage_description}"
+        
+        # Emit the alert to all connected clients
+        socketio.emit('new_alert', {'timestamp': datetime.now().strftime('%m/%d %H:%M'), 
+                            'message': formatted_message})
 
         # Validate ticker, plan, and stage
         cursor.execute("SELECT id FROM tickers WHERE name = ?", (ticker_name,))
@@ -387,4 +441,4 @@ def delete_plan(ticker, plan):
 setup_database()
 
 if __name__ == "__main__":
-    socketio.run(app, host='0.0.0.0', debug=True, port=5000)
+    socketio.run(app, host='0.0.0.0', debug=False, port=5000)

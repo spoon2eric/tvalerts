@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tradingview Alerts</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .container {
+            width: 50%;
+            margin: auto;
+        }
+
+        header {
+            background: #50b3a2;
+            color: #ffffff;
+            text-align: center;
+            padding: 1em;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-around;
+            background: #333;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            padding: 1em;
+        }
+
+        .boxed-section {
+            width: 80%;
+            max-width: 600px;
+            padding: 20px;
+            margin: 20px auto;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 12px #aaa;
+            background-color: #f9f9f9;
+        }
+
+        .clear-all {
+            background-color: red;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            float: right;
+            margin-bottom: 20px; /* Add this line */
+        }
+
+
+        @media(max-width: 768px) {
+            .container {
+                width: 95%;
+            }
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin: 5px 0;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Tradingview Alerts</h1>
+    </header>
+    <nav>
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('settings') }}">Settings</a>
+        <a href="{{ url_for('alerts') }}">Alerts</a>
+    </nav>
+    <div class="container">
+        <h2>Latest Alerts</h2>
+        <button id="clearAll" class="clear-all">Clear All</button>
+        <div class="boxed-section">
+            <label>Time is in UTC, -5 for Central Tz</label>
+            <ul id="alerts-list">
+                {% for alert in alerts %}
+                <li><strong>{{ alert[1] }}</strong>
+                    - <strong>Ticker: </strong>{{ alert[2] }}, <strong>Plan: </strong>{{ alert[3] }}, <strong>Stage: </strong>{{ alert[4] }}</li>
+                {% endfor %}
+            </ul>                   
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        const socket = io();
+        socket.on('new_alert', function(data) {
+            const newAlert = document.createElement('li');
+            newAlert.innerHTML = `<strong>${data.timestamp}</strong>: Ticker: ${data.ticker}, Plan: ${data.plan}, Stage: ${data.stage}`;
+            document.getElementById('alerts-list').prepend(newAlert);
+        });
+
+        document.getElementById('clearAll').addEventListener('click', function() {
+            fetch('/clear_alerts', {
+                method: 'POST'
+            }).then(response => response.json()).then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('alerts-list').innerHTML = '';
+                }
+            });
+        });
+    </script>    
+</body>
+</html>

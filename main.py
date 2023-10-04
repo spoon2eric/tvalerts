@@ -399,6 +399,35 @@ def webhook():
 
     return jsonify(success=True), 200
 
+@app.route('/reset_stages', methods=['POST'])
+def reset_stages():
+    ticker = request.form.get('ticker')
+    plan = request.form.get('plan')
+
+    conn = sqlite3.connect(DATABASE)
+    cur = conn.cursor()
+    
+    # Step 1: Delete from the errors table
+    cur.execute("""
+        DELETE FROM errors
+        WHERE ticker_id = (SELECT id FROM tickers WHERE name = ?)
+        AND plan_id = (SELECT id FROM plans WHERE name = ?)
+    """, (ticker, plan))
+
+    # Step 2: Reset the status in the ticker_stage_status table
+    cur.execute("""
+        UPDATE ticker_stage_status
+        SET status = 'waiting'
+        WHERE ticker_id = (SELECT id FROM tickers WHERE name = ?)
+        AND stage_id IN (SELECT id FROM stages WHERE plan_id = (SELECT id FROM plans WHERE name = ?))
+    """, (ticker, plan))
+    
+    conn.commit()
+    conn.close()
+
+    # Redirect back to the index after resetting
+    return redirect(url_for('index'))
+
 @app.route('/delete/<string:ticker>/<string:plan>', methods=['POST'])
 def delete_plan(ticker, plan):
     try:

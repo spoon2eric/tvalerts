@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Settings</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
+            background-color: #181818;
+            /* Dark background for the body */
+            color: #e0e0e0;
+            /* Light color for the main text */
             margin: 0;
             padding: 0;
         }
@@ -17,7 +21,8 @@
         }
 
         header {
-            background: #50b3a2;
+            background: #2d2d2d;
+            /* Slightly lighter dark shade for the header */
             color: #ffffff;
             text-align: center;
             padding: 1em;
@@ -26,26 +31,47 @@
         nav {
             display: flex;
             justify-content: space-around;
-            background: #333;
+            background: #232323;
+            /* Darker shade for the navigation */
         }
 
         nav a {
-            color: white;
+            color: #b8b8b8;
+            /* Light gray for navigation links */
             text-decoration: none;
             text-align: center;
             padding: 1em;
         }
 
+        nav a:hover {
+            color: #ffffff;
+            /* Slightly brighter color on hover */
+        }
+
         form {
-            background: #ffffff;
+            background: #202020;
+            /* Dark background for forms */
             padding: 20px;
             margin-bottom: 20px;
             border-radius: 8px;
         }
 
-        label, select, input, button {
+        label {
+            display: inline-block;
+            margin-bottom: 10px;
+            /* Adjust this value to your preference for spacing below the label */
+        }
+
+        select,
+        input {
             display: block;
             margin-bottom: 20px;
+            color: #e0e0e0;
+            /* Light color for form elements */
+            background: #333;
+            /* Darker background for input fields */
+            border: 1px solid #555;
+            /* Border color for input fields */
         }
 
         button {
@@ -62,13 +88,15 @@
         }
 
         .boxed-section {
-            width: 48%; 
+            width: 48%;
             max-width: 600px;
             padding: 20px;
             margin: 20px auto;
-            border: 1px solid #ccc;
-            box-shadow: 2px 2px 12px #aaa;
-            background-color: #f9f9f9;
+            border: 1px solid #333;
+            /* Dark border for the boxed section */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background-color: #202020;
+            /* Dark background for the boxed section */
         }
 
         .settings-grid {
@@ -77,14 +105,30 @@
             justify-content: space-between;
         }
 
-
         @media(max-width: 768px) {
             .container {
                 width: 95%;
             }
+
             .boxed-section {
                 width: 100%;
             }
+        }
+
+        .delete-button {
+            background: #d9534f;
+            /* Red background for the delete buttons */
+            color: #ffffff;
+            /* White text color */
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .delete-button:hover {
+            background: #c9302c;
+            /* Darker red for hover state */
         }
     </style>
     <script>
@@ -97,6 +141,7 @@
         }
     </script>
 </head>
+
 <body>
     <header>
         <h1>Tradingview Alerts</h1>
@@ -113,13 +158,13 @@
                 <label for="ticker_to_add">Ticker:</label>
                 <select name="ticker_to_add">
                     {% for ticker in tickers %}
-                        <option value="{{ ticker[0] }}">{{ ticker[1] }}</option>
+                    <option value="{{ ticker[0] }}">{{ ticker[1] }}</option>
                     {% endfor %}
                 </select>
                 <label for="plan_to_add">Plan:</label>
                 <select name="plan_to_add">
                     {% for plan in plans %}
-                        <option value="{{ plan[0] }}">{{ plan[1] }}</option>
+                    <option value="{{ plan[0] }}">{{ plan[1] }}</option>
                     {% endfor %}
                 </select>
                 <button type="submit" name="add_ticker_to_plan">Add ticker to Plan</button>
@@ -130,7 +175,7 @@
             <form method="POST">
                 <select name="ticker">
                     {% for ticker in tickers %}
-                        <option value="{{ ticker[0] }}">{{ ticker[1] }}</option>
+                    <option value="{{ ticker[0] }}">{{ ticker[1] }}</option>
                     {% endfor %}
                 </select>
                 <label for="plan_name">Plan Name:</label>
@@ -140,11 +185,11 @@
                     <input type="text" name="stages" required>
                 </div>
                 <button type="button" onclick="addStageField()">+</button>
-                
+
                 {% if error %}
-                    <div class="error">Plan already exists in the database.</div>
+                <div class="error">Plan already exists in the database.</div>
                 {% endif %}
-            
+
                 <button type="submit" name="add_plan">Add Plan</button>
             </form>
         </div>
@@ -158,10 +203,10 @@
                 <label for="ticker_to_delete">Select Ticker to Delete:</label>
                 <select name="ticker_to_delete">
                     {% for ticker in tickers %}
-                        <option value="{{ ticker[0] }}">{{ ticker[1] }}</option>
+                    <option value="{{ ticker[0] }}">{{ ticker[1] }}</option>
                     {% endfor %}
                 </select>
-                <button type="submit" name="delete_ticker">Delete</button>
+                <button type="submit" class="delete-button">Delete</button>
             </form>
         </div>
         <div class="boxed-section">
@@ -169,17 +214,18 @@
             <form method="POST">
                 <select name="delete_plan">
                     {% for plan in plans %}
-                        <option value="{{ plan[0] }}">{{ plan[1] }}</option>
+                    <option value="{{ plan[0] }}">{{ plan[1] }}</option>
                     {% endfor %}
                 </select>
-                <button type="submit" name="delete_plan_submit">Delete Plan</button>
+                <button type="submit" class="delete-button">Delete Plan</button>
             </form>
         </div>
     </div>
     <script>
         {% if plan_exists %}
-            alert("The plan already exists in the database.");
+        alert("The plan already exists in the database.");
         {% endif %}
     </script>
 </body>
+
 </html>

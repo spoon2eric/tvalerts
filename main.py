@@ -349,19 +349,19 @@ def webhook():
         cursor.execute("SELECT id FROM tickers WHERE name = ?", (ticker_name,))
         ticker_id = cursor.fetchone()
         if ticker_id is None:
-            logging.info(f"Invalid ticker")
+            logging.info(f"Invalid ticker received: " (ticker_name))
             return jsonify(error="Invalid ticker"), 400
         
         cursor.execute("SELECT id FROM plans WHERE name = ?", (plan_name,))
         plan_id = cursor.fetchone()
         if plan_id is None:
-            logging.info(f"Invalid plan")
+            logging.info(f"Invalid plan received: " (plan_name))
             return jsonify(error="Invalid plan"), 400
         
         cursor.execute("SELECT id, sequence FROM stages WHERE description = ? AND plan_id = ?", (stage_description, plan_id[0]))
         stage = cursor.fetchone()
         if stage is None:
-            logging.info(f"Invalid stage")
+            logging.info(f"Invalid stage: " (stage))
             return jsonify(error="Invalid stage"), 400
 
         # Validate the sequence

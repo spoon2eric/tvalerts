@@ -320,6 +320,7 @@ def webhook():
     
     try:
         data = request.json
+        logging.info(f"Received payload at /webhook: {data}")
         ticker_name = data.get('ticker')
         plan_name = data.get('plan')
         stage_description = data.get('stage')

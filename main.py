@@ -72,6 +72,7 @@ def handle_new_alert(data):
 
     except sqlite3.Error as e:
         print("Database error:", e)
+        logging.info(f"Database error: ", e)
     finally:
         if conn:
             conn.close()
@@ -310,6 +311,7 @@ def get_data():
 
     except sqlite3.Error as e:
         print("Database error:", e)
+        logging.info(f"Database error: ", e)
         return jsonify(error="Database error occurred"), 500
     finally:
         conn.close()
@@ -327,6 +329,7 @@ def webhook():
 
         # Validate the received data
         if not ticker_name or not plan_name or not stage_description:
+            logging.info(f"Invalid data received")
             return jsonify(error="Invalid data received"), 400
         
         cursor = conn.cursor()
@@ -346,16 +349,19 @@ def webhook():
         cursor.execute("SELECT id FROM tickers WHERE name = ?", (ticker_name,))
         ticker_id = cursor.fetchone()
         if ticker_id is None:
+            logging.info(f"Invalid ticker")
             return jsonify(error="Invalid ticker"), 400
         
         cursor.execute("SELECT id FROM plans WHERE name = ?", (plan_name,))
         plan_id = cursor.fetchone()
         if plan_id is None:
+            logging.info(f"Invalid plan")
             return jsonify(error="Invalid plan"), 400
         
         cursor.execute("SELECT id, sequence FROM stages WHERE description = ? AND plan_id = ?", (stage_description, plan_id[0]))
         stage = cursor.fetchone()
         if stage is None:
+            logging.info(f"Invalid stage")
             return jsonify(error="Invalid stage"), 400
 
         # Validate the sequence
@@ -393,6 +399,7 @@ def webhook():
 
     except sqlite3.Error as e:
         print("Database error:", e)
+        logging.info(f"Database error: ", e)
         return jsonify(error="Database error occurred"), 500
     finally:
         if conn:
@@ -462,6 +469,7 @@ def delete_plan(ticker, plan):
 
     except sqlite3.Error as e:
         print("Database error:", e)
+        logging.info(f"Database error: ", e)
     finally:
         if conn:
             conn.close()

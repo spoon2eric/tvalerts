@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import sqlite3
 import os
+from dotenv import load_dotenv
 import logging
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_socketio import emit, send
@@ -10,8 +11,13 @@ from pymongo.errors import PyMongoError
 
 logging.basicConfig(level=logging.INFO)
 
+load_dotenv()
 #MongoDB connection information
-MONGO_URI = "mongodb://database_ip:27017/"
+MONGO_USERNAME = os.getenv("MONGO_USERNAME")
+MONGO_PASSWORD = os.getenv("MONGO_PASSWORD")
+MONGO_IP = os.getenv("MONGO_IP")
+MONGO_PORT = os.getenv("MONGO_PORT")
+MONGO_URI = f"mongodb://{MONGO_USERNAME}:{MONGO_PASSWORD}@{MONGO_IP}:{MONGO_PORT}/?authMechanism=DEFAULT"
 MONGO_DATABASE = "market_data"
 MONGO_COLLECTION_MCB = "market_cipher_b"
 

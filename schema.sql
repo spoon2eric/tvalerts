@@ -53,6 +53,5 @@ CREATE TABLE IF NOT EXISTS alerts (
 );
 
 
-
 -- Insert initial data
 INSERT OR IGNORE INTO tickers (name) VALUES ('ETHUSD'), ('BTCUSD'), ('LINKUSD'), ('MASKUSD'), ('PEPEUSD'), ('AVAXUSD'), ('FTMUSD'), ('AGIXUSD');

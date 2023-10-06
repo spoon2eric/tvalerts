@@ -5,8 +5,20 @@ import logging
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_socketio import emit, send
 from flask_socketio import SocketIO
+from pymongo import MongoClient
+from pymongo.errors import PyMongoError
 
 logging.basicConfig(level=logging.INFO)
+
+#MongoDB connection information
+MONGO_URI = "mongodb://database_ip:27017/"
+MONGO_DATABASE = "market_data"
+MONGO_COLLECTION_MCB = "market_cipher_b"
+
+mongo_client = MongoClient(MONGO_URI)
+db = mongo_client[MONGO_DATABASE]
+collection = db[MONGO_COLLECTION_MCB]
+
 
 # Directory of the script or current file.
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -47,6 +59,25 @@ def setup_database():
     finally:
         if conn:
             conn.close()
+
+def setup_mongodb():
+    logging.info("Setting up MongoDB...")
+    try:
+        mongo_client = MongoClient(MONGO_URI)
+        db = mongo_client[MONGO_DATABASE]
+
+        # Check if collection exists; if not, create it.
+        # Note: This step is optional because MongoDB automatically creates collections when inserting documents.
+        if MONGO_COLLECTION_MCB not in db.list_collection_names():
+            db.create_collection(MONGO_COLLECTION_MCB)
+            logging.info(f"Collection {MONGO_COLLECTION_MCB} created.")
+        else:
+            logging.info(f"Collection {MONGO_COLLECTION_MCB} already exists.")
+        
+        logging.info("MongoDB setup completed successfully.")
+
+    except Exception as e:
+        logging.error(f"Error setting up MongoDB: {e}")
 
 @socketio.on('new_alert')
 def handle_new_alert(data):
@@ -316,6 +347,79 @@ def get_data():
     finally:
         conn.close()
 
+@app.route('/mongo-mcbdata', methods=['POST'])
+def mongo_mcbdatahook():
+    try:
+        data = request.json
+        logging.info(f"Received payload at /mongo-mcbdata: {data}")
+
+        # Validate the received data (same as before)
+        required_fields = ['TV Time', 'Time Frame', 'type', 'ticker', 'Lt Blue Wave', 'Blue Wave', 'VWAP', 'Mny Flow', 'Buy', 'Blue Wave Crossing UP', 'Blue Wave Crossing Down', 'Zero', '100%', 'OB 1 Solid', 'OS 1 Solid', 'Trigger 1', 'Trigger 2', 'RSI', 'Sto RSI']
+        if not all(data.get(field) for field in required_fields):
+            logging.info(f"Invalid data received for mongo-mcbdata route")
+            return jsonify(error="Invalid data received for mongo-mcbdata route"), 400
+
+        # Instead of extracting each data point, you can just insert the entire data object into MongoDB (assuming all the keys are valid fields in your MongoDB collection)
+        collection.insert_one(data)
+        logging.info(f"MongoDB INSERT command was successful.")
+        
+    except PyMongoError as e:
+        logging.info(f"MongoDB Database error: {e}")
+        return jsonify(error="MongoDB Database error occurred"), 500
+
+    return jsonify(success=True), 200
+
+@app.route('/mcbdatahook', methods=['POST'])
+def mcbdatahook():
+    conn = sqlite3.connect(DATABASE)
+
+    try:
+        data = request.json
+        logging.info(f"Received payload at /mcbdatahook: {data}")
+        #Formatting for MarketCiper B
+        time_value = data.get('TV Time')
+        timeframe_value = data.get('Time Frame')
+        indicator_name = data.get('type') #Name of the indicator
+        ticker_value = data.get('ticker')
+        lt_blue_wave = data.get('Lt Blue Wave')
+        blue_wave = data.get('Blue Wave')
+        vwap_value = data.get('VWAP')
+        mny_flow = data.get('Mny Flow')
+        big_green_dot = data.get('Buy') #Value will be 1 if Green Dot appears
+        bw_crossing_up = data.get('Blue Wave Crossing UP')
+        bw_crossing_down = data.get('Blue Wave Crossing Down')
+        zero_line = data.get('Zero')
+        _100_percent = data.get('100%')
+        ob_1_solid = data.get('OB 1 Solid')
+        os_1_solid = data.get('OS 1 Solid')
+        trigger_1 = data.get('Trigger 1')
+        trigger_2 = data.get('Trigger 2')
+        rsi_value = data.get('RSI')
+        sto_rsi = data.get('Sto RSI')
+
+        # Validate the received data
+        if not time_value or not timeframe_value or not indicator_name or not ticker_value or not lt_blue_wave or not blue_wave or not vwap_value or not mny_flow or not big_green_dot or not bw_crossing_up or not bw_crossing_down or not zero_line or not _100_percent or not ob_1_solid or not os_1_solid or not trigger_1 or not trigger_2 or not rsi_value or not sto_rsi:
+            logging.info(f"Invalid data received")
+            return jsonify(error="Invalid data received"), 400
+        
+        cursor = conn.cursor()
+
+        cursor.execute('INSERT INTO market_cipher_b (time_value, timeframe_value, ticker_value, lt_blue_wave, blue_wave, vwap_value, mny_flow, big_green_dot, bw_crossing_up, bw_crossing_down, zero_line, _100_percent, ob_1_solid, os_1_solid, trigger_1, trigger_2, rsi_value, sto_rsi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                    (time_value, timeframe_value, ticker_value, lt_blue_wave, blue_wave, vwap_value, mny_flow, big_green_dot, bw_crossing_up, bw_crossing_down, zero_line, _100_percent, ob_1_solid, os_1_solid, trigger_1, trigger_2, rsi_value, sto_rsi))
+        conn.commit()
+        logging.info(f"INSERT command was successful.")
+
+    except sqlite3.Error as e:
+        print("Database error:", e)
+        logging.info(f"Database error: {e}")
+        return jsonify(error="Database error occurred"), 500
+    finally:
+        if conn:
+            conn.close()
+
+    return jsonify(success=True), 200
+
+
 @app.route('/webhook', methods=['POST'])
 def webhook():
     conn = sqlite3.connect(DATABASE)
@@ -476,7 +580,72 @@ def delete_plan(ticker, plan):
 
     return redirect(url_for('index'))
 
-setup_database()
+def find_target_id():
+    # Connect to the SQLite database
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    # Execute the SQL query to fetch all records from the 'market_cipher_b' table
+    cursor.execute('SELECT * FROM market_cipher_b')
+    rows = cursor.fetchall()
+
+    # Column names (based on the provided table structure)
+    columns = ['id', 'time_value', 'timeframe_value', 'ticker', 'lt_blue_wave', 'blue_wave', 'vwap_value', 
+               'mny_flow', 'big_green_dot', 'bw_crossing_up', 'bw_crossing_down', 'zero_line', 
+               '_100_percent', 'ob_1_solid', 'os_1_solid', 'trigger_1', 'trigger_2', 'rsi_value', 'sto_rsi']
+
+    # Convert rows into a list of dictionaries
+    records = [dict(zip(columns, row)) for row in rows]
+    for record in records:
+        record['id'] = int(record['id'])
+        record['bw_crossing_down'] = int(record['bw_crossing_down']) if record['bw_crossing_down'] != 'null' else 0  # or another default value
+        record['zero_line'] = int(record['zero_line'])
+        record['bw_crossing_up'] = int(record['bw_crossing_up']) if record['bw_crossing_up'] != 'null' else 0
+        # any other fields that need to be converted...
+
+
+
+    # Use a helper function to attempt the conversion
+    def is_big_green_dot(record):
+        try:
+            return int(record['big_green_dot']) == 1
+        except ValueError:
+            return False
+
+    # Step 1: Find the maximum id with "15MIN" timeframe and big_green_dot value of 1
+    ids_with_15MIN_and_big_green_dot = [record['id'] for record in records if record['timeframe_value'] == "5MIN" and record['big_green_dot'] == 1]
+    start_id = max(ids_with_15MIN_and_big_green_dot) if ids_with_15MIN_and_big_green_dot else None
+    
+    logging.debug("ID's with Big Green Dot: ", ids_with_15MIN_and_big_green_dot)
+    print("ID's with Big Green Dot: ", ids_with_15MIN_and_big_green_dot)
+
+    if not start_id:
+        conn.close()
+        return None
+
+    # Step 2: Find the first id from start_id where bw_crossing_down is greater than zero_line and both bw_crossing_up and bw_crossing_down are non-negative
+    for record in records:
+        if int(record['id']) > int(start_id) and record['bw_crossing_down'] > record['zero_line'] and record['bw_crossing_up'] >= 0 and record['bw_crossing_down'] >= 0:
+            start_id = record['id']
+            logging.debug("First Red Dot: ", start_id)
+            print("First Red Dot - ID: ", start_id)
+            break
+
+    # Step 3: Find the first id from start_id where bw_crossing_up is less than zero_line and greater than os_1_solid
+    for record in records:
+        if record['id'] > start_id and record['bw_crossing_up'] < record['zero_line'] and record['bw_crossing_up'] > record['os_1_solid']:
+            conn.close()
+            logging.debug("First Green Dot for Buy if found: ", start_id)
+            print("First Green Dot for Buy if found - ID: ", start_id)
+            return record['id']
+
+    conn.close()
+    return None
+
+
+#setup_database()
+setup_mongodb()
+find_target_id()
 
 if __name__ == "__main__":
     socketio.run(app, host='0.0.0.0', debug=False, port=5000)

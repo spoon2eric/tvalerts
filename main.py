@@ -360,7 +360,7 @@ def mongo_mcbdatahook():
         logging.info(f"Received payload at /mongo-mcbdata: {data}")
 
         # Validate the received data (same as before)
-        required_fields = ['TV Time', 'Time Frame', 'type', 'ticker', 'Lt Blue Wave', 'Blue Wave', 'VWAP', 'Mny Flow', 'Buy', 'Blue Wave Crossing UP', 'Blue Wave Crossing Down', 'Zero', '100%', 'OB 1 Solid', 'OS 1 Solid', 'Trigger 1', 'Trigger 2', 'RSI', 'Sto RSI']
+        required_fields = ['TV Time', 'Time Frame', 'type', 'ticker', 'price', 'Lt Blue Wave', 'Blue Wave', 'VWAP', 'Mny Flow', 'Buy', 'Blue Wave Crossing UP', 'Blue Wave Crossing Down', 'Zero', '100%', 'OB 1 Solid', 'OS 1 Solid', 'Trigger 1', 'Trigger 2', 'RSI', 'Sto RSI']
         if not all(data.get(field) for field in required_fields):
             logging.info(f"Invalid data received for mongo-mcbdata route")
             return jsonify(error="Invalid data received for mongo-mcbdata route"), 400
